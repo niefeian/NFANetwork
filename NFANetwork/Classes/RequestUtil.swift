@@ -122,17 +122,7 @@ open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
     
     func serializedRequestBody() -> Data? {
         if bodyType == "feifei.com" {
-            #if DEBUG
-            var result = method == "GET" ? "" : ""
-            var firstPass = true
-            for (key, value) in parameters {
-                let encodedKey: NSString = key.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)! as NSString
-                let encodedValue: NSString = value.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)! as NSString
-                result += firstPass ? "\(encodedKey)=\(encodedValue)" : "&\(encodedKey)=\(encodedValue)"
-                firstPass = false;
-            }
-            print(url.description + "?" + result)
-            #endif
+           
             var json : String = ""
             do {
                 let data = try JSONSerialization.data(withJSONObject: parameters, options: JSONSerialization.WritingOptions.prettyPrinted)
@@ -141,6 +131,9 @@ open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
             }catch let e {
                 print(e)
             }
+            #if DEBUG
+                print(url.description + "?" + "m=\(json)")
+            #endif
             return "m=\(json)".data(using: String.Encoding.utf8, allowLossyConversion: true)
         }
         return queryString().data(using: String.Encoding.utf8, allowLossyConversion: true)
