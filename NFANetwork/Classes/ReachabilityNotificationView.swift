@@ -61,8 +61,6 @@ public class ReachabilityNotificationView: NSObject {
     @objc func reachabilityChanged(note: NSNotification) {
         let reachability = note.object as! Reachability // 准备获取网络连接信息
         if !reachability.isReachable{
-            //断网了
-            
             return
         }
         

@@ -121,8 +121,7 @@ open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
     }
     
     func serializedRequestBody() -> Data? {
-        if bodyType == "feifei.com" {
-           
+        if bodyType == "feian.com" {
             var json : String = ""
             do {
                 let data = try JSONSerialization.data(withJSONObject: parameters, options: JSONSerialization.WritingOptions.prettyPrinted)
