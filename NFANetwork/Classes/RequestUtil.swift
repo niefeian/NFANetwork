@@ -33,6 +33,7 @@ open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
     open var parameters: Dictionary<String, String> = Dictionary()
     open var completionHandler: RequestCompletionHandler
     open var bodyType : HTTP_BODY_TYPE  = .天COM
+    open var bodyData: Data?//外部直接传进来
     
     open var contentType: String? {
         set {
@@ -78,6 +79,9 @@ open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
         
         if (parameters.count > 0) {
             serializeRequestParameters()
+        }else if bodyData != nil
+        {
+            body = bodyData
         }
         
         if _requestOperationQueue == nil {
@@ -116,7 +120,12 @@ open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
     //MARK: Request Parameters
     func serializeRequestParameters() {
         contentType = "application/x-www-form-urlencoded"
-        if bodyType == .飞2COM {
+        if bodyData != nil
+        {
+//            contentType = "application/json"
+            body = bodyData
+        }
+        else if bodyType == .飞2COM {
             if let queryURL = queryParametersURL(false) {
                url = queryURL
             }
