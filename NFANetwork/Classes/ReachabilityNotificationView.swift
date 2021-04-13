@@ -10,7 +10,7 @@ import UIKit
 
 public class ReachabilityNotificationView: NSObject {
     
-    static let sharedInstance = ReachabilityNotificationView()
+    static  public let sharedInstance = ReachabilityNotificationView()
     
     var isCanUseReachableViaWWAN = false
     var isCanUseWWANDownlod = false

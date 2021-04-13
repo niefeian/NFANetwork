@@ -12,6 +12,11 @@ public typealias RequestCompletionHandler = (URLResponse?, Data?, NSError?) -> V
 
 internal var _requestOperationQueue: OperationQueue?
 
+public enum HTTP_BODY_TYPE {
+    case 普通 , 天COM , 飞COM , 飞2COM
+}
+
+
 open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
     
     
@@ -27,7 +32,7 @@ open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
     open var headers: Dictionary<String, String> = Dictionary()
     open var parameters: Dictionary<String, String> = Dictionary()
     open var completionHandler: RequestCompletionHandler
-    open var bodyType : String?
+    open var bodyType : HTTP_BODY_TYPE  = .天COM
     
     open var contentType: String? {
         set {
@@ -77,20 +82,21 @@ open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
         
         if _requestOperationQueue == nil {
             _requestOperationQueue = OperationQueue()
-            _requestOperationQueue!.maxConcurrentOperationCount = 4
+            _requestOperationQueue!.maxConcurrentOperationCount = 10
             _requestOperationQueue!.name = "com.niefeian.net_framework"
         }
         
         connection = NSURLConnection(request: urlRequest() as URLRequest, delegate: self)
         connection!.setDelegateQueue(_requestOperationQueue)
         connection!.start()
+       
     }
     
     //MARK: Request Creation
     
     open func urlRequest() -> NSMutableURLRequest {
         // 设定超时时间为20秒
-        let request: NSMutableURLRequest = NSMutableURLRequest(url: url, cachePolicy: NSURLRequest.CachePolicy.useProtocolCachePolicy, timeoutInterval: 30)
+        let request: NSMutableURLRequest = NSMutableURLRequest(url: url, cachePolicy: NSURLRequest.CachePolicy.useProtocolCachePolicy, timeoutInterval: 60)
         request.httpMethod = method
         request.httpBody = body
         
@@ -110,18 +116,26 @@ open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
     //MARK: Request Parameters
     func serializeRequestParameters() {
         contentType = "application/x-www-form-urlencoded"
-        
-        if (method == "GET") {
+        if bodyType == .飞2COM {
+            if let queryURL = queryParametersURL(false) {
+               url = queryURL
+            }
+        }
+        else if method == "GET"
+        {
             if let queryURL = queryParametersURL() {
                 url = queryURL
             }
-        } else {
+        }
+        else
+        {
             body = serializedRequestBody()
         }
     }
     
     func serializedRequestBody() -> Data? {
-        if bodyType == "feian.com" {
+        
+        if bodyType == .飞COM {
             var json : String = ""
             do {
                 let data = try JSONSerialization.data(withJSONObject: parameters, options: JSONSerialization.WritingOptions.prettyPrinted)
@@ -130,37 +144,41 @@ open class RequestUtil: NSObject, NSURLConnectionDataDelegate {
             }catch let e {
                 print(e)
             }
-            #if DEBUG
+//            #if DEBUG
                 print(url.description + "?" + "m=\(json)")
-            #endif
+//            #endif
             return "m=\(json)".data(using: String.Encoding.utf8, allowLossyConversion: true)
         }
+        
         return queryString().data(using: String.Encoding.utf8, allowLossyConversion: true)
     }
     
-    func queryParametersURL() -> URL? {
-        var qryString = queryString();
+    func queryParametersURL(_ encoding : Bool = true) -> URL? {
+        var qryString = queryString(encoding);
         if !url.absoluteString.contains("?") {
             qryString = "?" + qryString
         } else {
             qryString = "&" + qryString
         }
+        
+        print(url.absoluteString + qryString)
+        
         return URL(string: url.absoluteString + qryString)
     }
     
-    open func queryString() -> String {
+    open func queryString(_ encoding : Bool = true) -> String {
         var result = method == "GET" ? "" : ""
         var firstPass = true
         
         for (key, value) in parameters {
-            let encodedKey: NSString = key.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)! as NSString
-            let encodedValue: NSString = value.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)! as NSString
+            let encodedKey: NSString = encoding ? key.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)! as NSString : key as NSString
+            let encodedValue: NSString = encoding ? value.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)! as NSString : value as NSString
             result += firstPass ? "\(encodedKey)=\(encodedValue)" : "&\(encodedKey)=\(encodedValue)"
             firstPass = false;
         }
-        #if DEBUG
+//        #if DEBUG
             print(url.description + "?" + result)
-        #endif
+//        #endif
         return result
     }
     
